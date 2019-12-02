@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -25,6 +24,4 @@ func main() {
 	s := strings.Split(string(b), "\n")
 	log.Printf("arr = %v", s)
 
-
-	csv.NewReader(read)
 }
