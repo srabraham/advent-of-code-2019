@@ -1,10 +1,12 @@
 package main
 
 import (
-"io/ioutil"
-"log"
-"strconv"
-"strings"
+	"github.com/srabraham/advent-of-code-2019/internal/intcode"
+	"io/ioutil"
+	"log"
+	"runtime"
+	"strconv"
+	"strings"
 )
 
 func f(err error) {
@@ -13,35 +15,8 @@ func f(err error) {
 	}
 }
 
-func run(in []int64) []int64 {
-	currPos := 0
-	for {
-		switch in[currPos] {
-		case 1:
-			log.Printf("doing an add: %v, %v, %v, %v", in[currPos], in[currPos+1], in[currPos+2], in[currPos+3])
-			aVal := in[currPos+1]
-			bVal := in[currPos+2]
-			cVal := in[currPos+3]
-			in[cVal] = in[aVal] + in[bVal]
-			currPos += 4
-		case 2:
-			log.Printf("doing an mult: %v, %v, %v, %v", in[currPos], in[currPos+1], in[currPos+2], in[currPos+3])
-			aVal := in[currPos+1]
-			bVal := in[currPos+2]
-			cVal := in[currPos+3]
-			in[cVal] = in[aVal] * in[bVal]
-			currPos += 4
-		case 99:
-			return in
-		default:
-			log.Fatalf("bad opcode %v", in[currPos])
-		}
-	}
-	log.Fatal("shouldn't happen")
-	return nil
-}
-
 func main() {
+	log.Printf("num CPU = %v", runtime.NumCPU())
 	b, err := ioutil.ReadFile("cmd/day02/input02-1a.txt")
 	f(err)
 	nums := strings.Split(string(b), ",")
@@ -60,7 +35,7 @@ func main() {
 			copy(cmdsCopy, cmds)
 			cmdsCopy[1] = noun
 			cmdsCopy[2] = verb
-			res := run(cmdsCopy)[0]
+			res := intcode.RunIntCode(cmdsCopy)[0]
 			log.Printf("for noun %v, verb %v got res = %v", noun, verb, res)
 			if res == 19690720 {
 				return

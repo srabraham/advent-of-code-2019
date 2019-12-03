@@ -28,8 +28,8 @@ func main() {
 
 	for x, yMap := range grid1 {
 		for y := range yMap {
-			if grid2[x] != nil && grid2[x][y] {
-				log.Printf("found intersection at %v, %v. === %v", x, y, abs(x) + abs(y))
+			if grid2[x] != nil && grid2[x][y] > 0 {
+				log.Printf("found intersection at %v, %v. === %v", x, y, grid1[x][y]+grid2[x][y])
 			}
 		}
 	}
@@ -42,9 +42,12 @@ func abs(x int) int {
 	return x
 }
 
-func getGrid(w1 []string) map[int]map[int]bool {
-	grid1 := make(map[int]map[int]bool)
+
+// 16592
+func getGrid(w1 []string) map[int]map[int]int {
+	grid1 := make(map[int]map[int]int)
 	var currX, currY int
+	stepCount := 0
 	for _, w := range w1 {
 		dir := w[:1]
 		length, err := strconv.Atoi(w[1:])
@@ -53,26 +56,46 @@ func getGrid(w1 []string) map[int]map[int]bool {
 		case "U":
 			for y := 0; y < length; y++ {
 				currY++
+				stepCount++
 				initG(grid1, currX)
-				grid1[currX][currY] = true
+				if grid1[currX][currY] == 0 {
+					//stepCount = grid1[currX][currY]
+					grid1[currX][currY] = stepCount
+				}
+				//grid1[currX][currY] = stepCount
 			}
 		case "D":
 			for y := 0; y < length; y++ {
 				currY--
+				stepCount++
 				initG(grid1, currX)
-				grid1[currX][currY] = true
+				if grid1[currX][currY] == 0 {
+					//stepCount = grid1[currX][currY]
+					grid1[currX][currY] = stepCount
+				}
+				//grid1[currX][currY] = stepCount
 			}
 		case "L":
 			for x := 0; x < length; x++ {
 				currX--
+				stepCount++
 				initG(grid1, currX)
-				grid1[currX][currY] = true
+				if grid1[currX][currY] == 0 {
+					//stepCount = grid1[currX][currY]
+					grid1[currX][currY] = stepCount
+				}
+				//grid1[currX][currY] = stepCount
 			}
 		case "R":
 			for x := 0; x < length; x++ {
 				currX++
+				stepCount++
 				initG(grid1, currX)
-				grid1[currX][currY] = true
+				if grid1[currX][currY] == 0 {
+					//stepCount = grid1[currX][currY]
+					grid1[currX][currY] = stepCount
+				}
+				//grid1[currX][currY] = stepCount
 			}
 		default:
 			log.Fatalf("bad %v", dir)
@@ -81,8 +104,8 @@ func getGrid(w1 []string) map[int]map[int]bool {
 	return grid1
 }
 
-func initG(g map[int]map[int]bool, x int) {
+func initG(g map[int]map[int]int, x int) {
 	if g[x] == nil {
-		g[x] = make(map[int]bool)
+		g[x] = make(map[int]int)
 	}
 }
