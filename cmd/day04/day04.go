@@ -11,23 +11,56 @@ func f(err error) {
 	}
 }
 
-func main() {
-	//b, err := ioutil.ReadFile("cmd/day04/input04-1.txt")
-	//f(err)
-	//lines := strings.Split(string(b), "\n")
-	nums := make([]int64, 0)
-	for i := int64(171309); i <= 643603; i++ {
-
-		s := seanmath.ToString(i)
-		doubleNum := (s[0] == s[1]) || (s[1] == s[2]) ||(s[2] == s[3]) ||(s[3] == s[4]) ||(s[4] == s[5])
-		nonDec := (s[0] <= s[1]) && (s[1] <= s[2]) &&(s[2] <= s[3]) &&(s[3] <= s[4]) &&(s[4] <= s[5])
-
-		pt3 := (s[0] == s[1] && s[1] != s[2]) || (s[0] != s[1] && s[1] == s[2] && s[2] != s[3]) ||(s[1] != s[2] && s[2] == s[3] && s[3] != s[4]) ||(s[2] != s[3] && s[3] == s[4] && s[4] != s[5]) ||(s[3] != s[4] && s[4] == s[5])
-
-		if doubleNum && nonDec && pt3 {
-			nums = append(nums, i)
+func matchesPart1Criteria(n int64) bool {
+	s := seanmath.ToString(n)
+	counts := make(map[int64]int)
+	for i := 0; i < len(s)-1; i++ {
+		counts[seanmath.ParseString(s[i:i+1])]++
+		if s[i:i+1] > s[i+1:i+2] {
+			return false
 		}
-
 	}
-	log.Printf("len = %v, nums = %v", len(nums), nums)
+	counts[seanmath.ParseString(s[len(s)-1:])]++
+	for _, v := range counts {
+		if v >= 2 {
+			return true
+		}
+	}
+	return false
+}
+
+func matchesPart2Criteria(n int64) bool {
+	s := seanmath.ToString(n)
+	counts := make(map[int64]int)
+	for i := 0; i < len(s)-1; i++ {
+		counts[seanmath.ParseString(s[i:i+1])]++
+		if s[i:i+1] > s[i+1:i+2] {
+			return false
+		}
+	}
+	counts[seanmath.ParseString(s[len(s)-1:])]++
+	for _, v := range counts {
+		if v == 2 {
+			return true
+		}
+	}
+	return false
+}
+
+func main() {
+	numsPt1 := make([]int64, 0)
+	for i := int64(171309); i <= 643603; i++ {
+		if matchesPart1Criteria(i) {
+			numsPt1 = append(numsPt1, i)
+		}
+	}
+	log.Printf("part 1 len = %v, numsPt1 = %v", len(numsPt1), numsPt1)
+
+	numsPt2 := make([]int64, 0)
+	for i := int64(171309); i <= 643603; i++ {
+		if matchesPart2Criteria(i) {
+			numsPt2 = append(numsPt2, i)
+		}
+	}
+	log.Printf("part 2 len = %v, numsPt2 = %v", len(numsPt2), numsPt2)
 }
