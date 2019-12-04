@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -26,13 +27,20 @@ func main() {
 	log.Print(grid1)
 	log.Print(grid2)
 
+	dists := make([]int, 0)
 	for x, yMap := range grid1 {
 		for y := range yMap {
 			if grid2[x] != nil && grid2[x][y] > 0 {
 				log.Printf("found intersection at %v, %v. === %v", x, y, grid1[x][y]+grid2[x][y])
+				dists = append(dists, grid1[x][y]+grid2[x][y])
 			}
 		}
 	}
+	sort.Ints(dists)
+	log.Printf("sorted dists = %v", dists)
+
+	dists64 := make([]int64, 0)
+	sort.Slice(dists64, func(i, j int) bool {return dists64[i] < dists64[j]})
 }
 
 func abs(x int) int {
