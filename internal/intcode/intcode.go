@@ -4,31 +4,103 @@ import (
 	"log"
 )
 
+func getModeVal(arr []int64, mode int64, pos int) int64 {
+	aVal := arr[pos]
+	if mode == 0 {
+		aVal = arr[aVal]
+	}
+	return aVal
+}
+
 // RunIntCode implements https://adventofcode.com/2019/day/2
-func RunIntCode(in []int64) []int64 {
+func RunIntCode(in []int64, input int64) int64 {
 	arr := make([]int64, len(in))
 	copy(arr, in)
+	var output int64
 	instPtr := 0
+bigLoop:
 	for {
-		switch arr[instPtr] {
+		inst := arr[instPtr] % 100
+		modeDec := arr[instPtr] / 100
+		mode1 := modeDec % 10
+		mode2 := (modeDec / 10) % 10
+		mode3 := (modeDec / 100) % 10
+
+		log.Printf("state: %v", arr)
+		log.Printf("running instr %v, %v", arr[instPtr], inst)
+
+		switch inst {
 		case 1:
 			// log.Printf("doing an add: %v, %v, %v, %v", arr[instPtr], arr[instPtr+1], arr[instPtr+2], arr[instPtr+3])
-			aVal := arr[instPtr+1]
-			bVal := arr[instPtr+2]
+			aVal := getModeVal(arr, mode1, instPtr+1)
+			bVal := getModeVal(arr, mode2, instPtr+2)
 			cVal := arr[instPtr+3]
-			arr[cVal] = arr[aVal] + arr[bVal]
+			if mode3 != 0 {
+				log.Fatal("unexpected mode 3")
+			}
+			arr[cVal] = aVal + bVal
 			instPtr += 4
 		case 2:
 			// log.Printf("doing an mult: %v, %v, %v, %v", arr[instPtr], arr[instPtr+1], arr[instPtr+2], arr[instPtr+3])
-			aVal := arr[instPtr+1]
-			bVal := arr[instPtr+2]
+			aVal := getModeVal(arr, mode1, instPtr+1)
+			bVal := getModeVal(arr, mode2, instPtr+2)
 			cVal := arr[instPtr+3]
-			arr[cVal] = arr[aVal] * arr[bVal]
+			if mode3 != 0 {
+				log.Fatal("unexpected mode 3")
+			}
+			arr[cVal] = aVal * bVal
+			instPtr += 4
+		case 3: // input
+			arr[arr[instPtr+1]] = input
+			instPtr += 2
+		case 4: // output
+			aVal := arr[instPtr+1]
+			if mode1 == 0 {
+				aVal = arr[aVal]
+			}
+			log.Printf("OUTPUT %v", aVal)
+			output = aVal
+			instPtr += 2
+		case 5: // jump if true
+			aVal := getModeVal(arr, mode1, instPtr+1)
+			bVal := getModeVal(arr, mode2, instPtr+2)
+			if aVal != 0 {
+				instPtr = int(bVal)
+			} else {
+				instPtr += 3
+			}
+		case 6: // jump if false
+			aVal := getModeVal(arr, mode1, instPtr+1)
+			bVal := getModeVal(arr, mode2, instPtr+2)
+			if aVal == 0 {
+				instPtr = int(bVal)
+			} else {
+				instPtr += 3
+			}
+		case 7: // less than
+			aVal := getModeVal(arr, mode1, instPtr+1)
+			bVal := getModeVal(arr, mode2, instPtr+2)
+			if aVal < bVal {
+				arr[arr[instPtr+3]] = 1
+			} else {
+				arr[arr[instPtr+3]] = 0
+			}
+			instPtr += 4
+		case 8: // equals
+			aVal := getModeVal(arr, mode1, instPtr+1)
+			bVal := getModeVal(arr, mode2, instPtr+2)
+			if aVal == bVal {
+				arr[arr[instPtr+3]] = 1
+			} else {
+				arr[arr[instPtr+3]] = 0
+			}
 			instPtr += 4
 		case 99:
-			return arr
+			log.Print("got 99. breaking")
+			break bigLoop
 		default:
-			log.Fatalf("bad opcode %v", arr[instPtr])
+			log.Fatalf("bad opcode %v", inst)
 		}
 	}
+	return output
 }
