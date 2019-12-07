@@ -15,7 +15,11 @@ func f(err error) {
 }
 
 func main() {
-	b, err := ioutil.ReadFile("cmd/day03/input03-1.txt")
+	RunPart2("cmd/day03/input03-1.txt")
+}
+
+func RunPart2(filename string) int {
+	b, err := ioutil.ReadFile(filename)
 	f(err)
 	lines := strings.Split(string(b), "\n")
 	w1 := strings.Split(lines[0], ",")
@@ -39,8 +43,7 @@ func main() {
 	sort.Ints(dists)
 	log.Printf("sorted dists = %v", dists)
 
-	dists64 := make([]int64, 0)
-	sort.Slice(dists64, func(i, j int) bool {return dists64[i] < dists64[j]})
+	return dists[0]
 }
 
 func abs(x int) int {
@@ -49,7 +52,6 @@ func abs(x int) int {
 	}
 	return x
 }
-
 
 // 16592
 func getGrid(w1 []string) map[int]map[int]int {

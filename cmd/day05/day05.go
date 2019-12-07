@@ -14,14 +14,8 @@ func f(err error) {
 	}
 }
 
-//func Result() int64 {
-//	return 0
-//}
-
-// 223
-func main() {
-	// b, err := ioutil.ReadFile("cmd/day05/input05-0.txt")
-	b, err := ioutil.ReadFile("cmd/day05/input05-1.txt")
+func RunPart2(filename string) int64 {
+	b, err := ioutil.ReadFile(filename)
 	f(err)
 	nums := strings.Split(string(b), ",")
 	cmds := make([]int64, 0)
@@ -31,5 +25,10 @@ func main() {
 		cmds = append(cmds, n)
 	}
 	// 7616021
-	log.Printf("output = %v", intcode.RunIntCode(cmds, 5))
+	return intcode.RunIntCodeMultiInput(cmds, []int64{5})
+}
+
+func main() {
+	// 7616021
+	log.Printf("output = %v", RunPart2("cmd/day05/input05-1.txt"))
 }

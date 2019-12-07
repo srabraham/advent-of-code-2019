@@ -33,8 +33,8 @@ func fuel2(mass int64) int64 {
 	return newFuel + fuel2(newFuel)
 }
 
-func main() {
-	b, err := ioutil.ReadFile("cmd/day01/input01-1.txt")
+func RunDay1(filename string) (int64, int64) {
+	b, err := ioutil.ReadFile(filename)
 	f(err)
 	s := strings.Split(string(b), "\n")
 	var totalFuelPart1, totalFuelPart2 int64
@@ -46,6 +46,10 @@ func main() {
 	}
 	log.Printf("total fuel part 1 is %v", totalFuelPart1)
 	log.Printf("total fuel part 2 is %v", totalFuelPart2)
+	return totalFuelPart1, totalFuelPart2
 
-	// 9769030
+}
+
+func main() {
+	RunDay1("cmd/day01/input01-1.txt")
 }

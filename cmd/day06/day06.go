@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/srabraham/advent-of-code-2019/internal/seanmath"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -40,26 +41,11 @@ func main() {
 	youOrbits := getAllOrbitsStr("YOU", m)
 
 	transfers := make([]string, 0)
-	transfers = append(transfers, sliceDiff(santaOrbits, youOrbits)...)
-	transfers = append(transfers, sliceDiff(youOrbits, santaOrbits)...)
+	transfers = append(transfers, seanmath.SliceDiff(santaOrbits, youOrbits)...)
+	transfers = append(transfers, seanmath.SliceDiff(youOrbits, santaOrbits)...)
 
 	// subtract off the entries for SAN and YOU
-	log.Printf("found %v transfers (part 2)", len(transfers) - 2)
-}
-
-// sliceDiff returns elements of a that are not in b
-func sliceDiff(a, b []string) []string {
-	bMap := make(map[string]bool)
-	for _, e := range b {
-		bMap[e] = true
-	}
-	result := make([]string, 0)
-	for _, e := range a {
-		if !bMap[e] {
-			result = append(result, e)
-		}
-	}
-	return result
+	log.Printf("found %v transfers (part 2)", len(transfers)-2)
 }
 
 func getOrbitsCount(start string, m map[string]string) int {

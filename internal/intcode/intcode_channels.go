@@ -1,23 +1,13 @@
 package intcode
 
-import (
-	"log"
-)
+import "log"
 
-func getModeVal(arr []int64, mode int64, pos int) int64 {
-	aVal := arr[pos]
-	if mode == 0 {
-		aVal = arr[aVal]
-	}
-	return aVal
-}
-
-func RunIntCodeMultiInput(in []int64, input []int64) int64 {
-	arr := make([]int64, len(in))
-	copy(arr, in)
+func RunIntCodeWithChannels(ops []int64, inputCh chan int64, outputCh chan int64) int64 {
+	arr := make([]int64, len(ops))
+	copy(arr, ops)
 	var output int64
 	instPtr := 0
-	inputPtr := 0
+	var lastOutput int64
 bigLoop:
 	for {
 		inst := arr[instPtr] % 100
@@ -51,8 +41,7 @@ bigLoop:
 			arr[cVal] = aVal * bVal
 			instPtr += 4
 		case 3: // input
-			arr[arr[instPtr+1]] = input[inputPtr]
-			inputPtr++
+			arr[arr[instPtr+1]] = <-inputCh
 			instPtr += 2
 		case 4: // output
 			aVal := arr[instPtr+1]
@@ -61,6 +50,8 @@ bigLoop:
 			}
 			log.Printf("OUTPUT %v", aVal)
 			output = aVal
+			outputCh <- output
+			lastOutput = output
 			instPtr += 2
 		case 5: // jump if true
 			aVal := getModeVal(arr, mode1, instPtr+1)
@@ -103,5 +94,7 @@ bigLoop:
 			log.Fatalf("bad opcode %v", inst)
 		}
 	}
-	return output
+	// nothing else to send
+	close(outputCh)
+	return lastOutput
 }

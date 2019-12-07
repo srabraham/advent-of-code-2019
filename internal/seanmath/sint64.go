@@ -39,7 +39,7 @@ func Cp(a []int64) []int64 {
 }
 
 func Sort(a []int64) {
-	sort.Slice(a, func(i, j int) bool {return a[i] < a[j]})
+	sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
 }
 
 func ToString(n int64) string {

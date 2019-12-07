@@ -6,5 +6,5 @@ import (
 )
 
 func TestRunPart2(t *testing.T) {
-	assert.Equal(t, int64(7616021), RunPart2("input05-1.txt"))
+	assert.Equal(t, 21666, RunPart2("input03-1.txt"))
 }
