@@ -7,8 +7,8 @@ import (
 
 func TestPart1(t *testing.T) {
 	assert.Equal(t, 1330, Part1("input08-1.txt", 25, 6))
-	expectedPart2 := "" +
-`X X X X     X X     X     X   X X X X   X X X X   
+	// Says FAHEF
+	expectedPart2 := `X X X X     X X     X     X   X X X X   X X X X   
 X         X     X   X     X   X         X         
 X X X     X     X   X X X X   X X X     X X X     
 X         X X X X   X     X   X         X         
