@@ -43,4 +43,5 @@ func RunBoost(filename string, inputs []int64) []int64 {
 func main() {
 	RunBoost("cmd/day09/input09-0.txt", []int64{})
 	RunBoost("cmd/day09/input09-1.txt", []int64{1})
+	RunBoost("cmd/day09/input09-1.txt", []int64{2})
 }

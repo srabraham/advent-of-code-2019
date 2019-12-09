@@ -5,26 +5,32 @@ import (
 )
 
 func getModeTarget(vals map[int64]int64, mode int64, pos int64, relativeBase int64) int64 {
-	var targ int64
-	aVal := vals[pos]
-	if mode == 0 {
-		targ = aVal
+	switch mode {
+	case 0: // position
+		return vals[pos]
+	case 1: // immediate
+		log.Fatalf("doesn't make sense to ask for immediate mode as a target")
+		return -1
+	case 2: // relative
+		return vals[pos] + relativeBase
+	default:
+		log.Fatalf("unexpected mode %v", mode)
+		return -1
 	}
-	if mode == 2 {
-		targ = aVal + relativeBase
-	}
-	return targ
 }
 
 func getModeVal(vals map[int64]int64, mode int64, pos int64, relativeBase int64) int64 {
-	aVal := vals[pos]
-	if mode == 0 {
-		aVal = vals[aVal]
+	switch mode {
+	case 0: // position
+		return vals[vals[pos]]
+	case 1: // immediate
+		return vals[pos]
+	case 2: // relative
+		return vals[vals[pos]+relativeBase]
+	default:
+		log.Fatalf("unexpected mode %v", mode)
+		return -1
 	}
-	if mode == 2 {
-		aVal = vals[aVal+relativeBase]
-	}
-	return aVal
 }
 
 func RunIntCodeWithChannels(ops []int64, inputCh chan int64, outputCh chan int64) int64 {
