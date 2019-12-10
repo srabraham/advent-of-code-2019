@@ -3,6 +3,8 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"math"
+	"sort"
 	"strings"
 )
 
@@ -36,16 +38,94 @@ func main() {
 		}
 	}
 	var max int
-	for _, row := range collisions {
+	var maxX, maxY int
+	for x, row := range collisions {
 		log.Print(row)
-		for _, v := range row {
+		for y, v := range row {
 			if v > max {
 				max = v
+				maxX = x
+				maxY = y
 			}
 		}
 	}
-	log.Printf("max = %v", max)
+	log.Printf("max = %v, maxX = %v, maxY = %v", max, maxX, maxY)
+
+	getRelAsts(grid, 11,11)
 }
+
+
+type RelAst struct {
+	x int
+	y int
+	distX int
+	distY int
+}
+
+func (ra RelAst) dist() int {
+	return ra.distX * ra.distX + ra.distY * ra.distY
+}
+
+func getRelAsts(grid [][]string, x int, y int) {
+	var ra []RelAst
+	for checkX := range grid {
+		for checkY, checkVal := range grid[checkX] {
+			if checkX == x && checkY == y {
+				continue
+			}
+			if checkVal == "#" {
+				r := RelAst{
+					x: checkX,
+					y: checkY,
+					distX: checkX - x,
+					distY: checkY-y,
+				}
+				ra = append(ra,r)
+				log.Printf("created ra %v", r)
+			}
+		}
+	}
+
+
+	mappedAngles := make(map[float64][]RelAst)
+
+	for _, r := range ra {
+		angle := math.Atan2(-float64(r.distY), float64(r.distX))
+		mappedAngles[angle] = append(mappedAngles[angle], r)
+	}
+
+	angles := make([]float64, 0)
+	for k := range mappedAngles {
+		angles = append(angles, k)
+	}
+
+	sort.Float64s(angles)
+	for _, s := range mappedAngles {
+		sort.Slice(s, func(i, j int) bool {
+			return math.Sqrt(float64(ra[i].distX)*float64(ra[i].distX)+float64(ra[i].distY)*float64(ra[i].distY)) < math.Sqrt(float64(ra[j].distX)*float64(ra[j].distX)+float64(ra[j].distY)*float64(ra[j].distY))
+		})
+	}
+
+	blast := 0
+	blastsThisPass := 1
+	for pass := 0; blastsThisPass > 0; pass++ {
+		blastsThisPass = 0
+		for _, a := range angles {
+			ma, found := mappedAngles[a]
+			if !found {
+				continue
+			}
+			if len(ma) <= pass {
+				continue
+			}
+			blast++
+			blastsThisPass++
+			val := ma[pass]
+			log.Printf("%v entry is %v", blast, val)
+		}
+	}
+}
+
 
 func countCollisions(grid [][]string, x int, y int) int {
 	collisions := 0
@@ -55,11 +135,6 @@ func countCollisions(grid [][]string, x int, y int) int {
 				continue
 			}
 			if checkVal == "#" {
-
-				if x == 9 && y == 9 && checkX == 0 && checkY == 6 {
-					log.Print("here")
-				}
-
 				rise := checkY - y
 				run := checkX - x
 				gcd := GCD(rise, run)
@@ -68,7 +143,7 @@ func countCollisions(grid [][]string, x int, y int) int {
 				xRay := x
 				yRay := y
 				intersect := false
-				loop:
+			loop:
 				for true {
 					xRay += run
 					yRay += rise
