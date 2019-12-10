@@ -51,10 +51,11 @@ func main() {
 	}
 	log.Printf("max = %v, maxX = %v, maxY = %v", max, maxX, maxY)
 
+	// this is part 2. TODO: rename the method
 	getRelAsts(grid, 11,11)
 }
 
-
+// RelAst is the relative position of an asteroid with respect to some other x,y point
 type RelAst struct {
 	x int
 	y int
@@ -62,12 +63,10 @@ type RelAst struct {
 	distY int
 }
 
-func (ra RelAst) dist() int {
-	return ra.distX * ra.distX + ra.distY * ra.distY
-}
-
 func getRelAsts(grid [][]string, x int, y int) {
 	var ra []RelAst
+	// find all the other asteroids on the board and calculate their positions
+	// relative to the x,y input pair
 	for checkX := range grid {
 		for checkY, checkVal := range grid[checkX] {
 			if checkX == x && checkY == y {
@@ -78,7 +77,7 @@ func getRelAsts(grid [][]string, x int, y int) {
 					x: checkX,
 					y: checkY,
 					distX: checkX - x,
-					distY: checkY-y,
+					distY: checkY - y,
 				}
 				ra = append(ra,r)
 				log.Printf("created ra %v", r)
@@ -87,6 +86,7 @@ func getRelAsts(grid [][]string, x int, y int) {
 	}
 
 
+	// map of angles to other asteroids on the ray extending at that angle from x,y
 	mappedAngles := make(map[float64][]RelAst)
 
 	for _, r := range ra {
@@ -108,6 +108,8 @@ func getRelAsts(grid [][]string, x int, y int) {
 
 	blast := 0
 	blastsThisPass := 1
+	// each pass is a full 2pi rotation of the blaster ray.
+	// keep doing passes until no asteroids remain.
 	for pass := 0; blastsThisPass > 0; pass++ {
 		blastsThisPass = 0
 		for _, a := range angles {
