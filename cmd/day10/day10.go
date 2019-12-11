@@ -140,7 +140,7 @@ func Part1(filename string) int {
 
 // RelAst is the relative position of an asteroid with respect to some other x,y point
 type RelAst struct {
-	pos GridPos
+	pos   GridPos
 	distX int
 	distY int
 }
@@ -150,10 +150,10 @@ func (ra RelAst) angle() float64 {
 }
 
 func (ra *RelAst) length() float64 {
-	return math.Sqrt(float64(ra.distX*ra.distX+ra.distY*ra.distY))
+	return math.Sqrt(float64(ra.distX*ra.distX + ra.distY*ra.distY))
 }
 
-func Part2(filename string, x, y int) {
+func Part2(filename string, x, y, targetMove int) GridPos {
 	g := ReadGrid(filename)
 
 	var ra []RelAst
@@ -167,7 +167,7 @@ func Part2(filename string, x, y int) {
 			checkVal, _ := g.ValAt(checkX, checkY)
 			if checkVal == "#" {
 				r := RelAst{
-					pos: GridPos{checkX, checkY},
+					pos:   GridPos{checkX, checkY},
 					distX: checkX - x,
 					distY: checkY - y,
 				}
@@ -181,7 +181,8 @@ func Part2(filename string, x, y int) {
 	anglesToAsteroids := make(map[int64][]RelAst)
 
 	for _, r := range ra {
-		angle := int64(math.Round(r.angle()*1_000_000.0))
+		// round all of the angles since these are floats
+		angle := int64(math.Round(r.angle() * 1_000_000.0))
 		anglesToAsteroids[angle] = append(anglesToAsteroids[angle], r)
 	}
 
@@ -193,18 +194,16 @@ func Part2(filename string, x, y int) {
 	seanmath.Sort(angles)
 	for _, s := range anglesToAsteroids {
 		sort.Slice(s, func(i, j int) bool {
-			log.Printf("compare %v to %v", s[i].length(), s[j].length())
 			return s[i].length() < s[j].length()
 		})
 	}
 
-
-
+	var targetResult GridPos
 	blast := 0
 	blastsThisPass := 1
 	// each pass is a full 2pi rotation of the blaster ray.
 	// keep doing passes until no asteroids remain.
-	g.vals[GridPos{x:x,y:y}] = "S"
+	g.vals[GridPos{x: x, y: y}] = "S"
 	for pass := 0; blastsThisPass > 0; pass++ {
 		blastsThisPass = 0
 		for _, a := range angles {
@@ -218,17 +217,21 @@ func Part2(filename string, x, y int) {
 			blast++
 			blastsThisPass++
 			val := ma[pass]
+			if blast == targetMove {
+				targetResult = val.pos
+			}
 			g.vals[val.pos] = "X"
-			log.Printf("%v entry is %v, grid =\n%v", blast, val, g)
+			//log.Printf("%v entry is %v, grid =\n%v", blast, val, g)
 		}
 	}
+
+	return targetResult
 }
 
 func main() {
 	Part1("cmd/day10/input10-1.txt")
-	Part2("cmd/day10/input10-1.txt", 11, 11)
+	Part2("cmd/day10/input10-1.txt", 11, 11, 200)
 }
-
 
 // greatest common divisor (GCD) via Euclidean algorithm
 func GCD(a, b int) int {
