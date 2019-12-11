@@ -74,7 +74,7 @@ bigLoop:
 			instPtr += 2
 		case 4: // output
 			aVal := getModeVal(vals, mode1, instPtr+1, relativeBase)
-			log.Printf("OUTPUT %v", aVal)
+			// log.Printf("OUTPUT %v", aVal)
 			output = aVal
 			outputCh <- output
 			lastOutput = output
