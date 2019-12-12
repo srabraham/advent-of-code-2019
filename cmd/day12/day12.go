@@ -37,7 +37,7 @@ func Part2(input string) int64 {
 
 		// for each of x,y,z, figure out if the all of the bodies have the same
 		// position as the start position. These are independently periodic, and
-		// due to conservation of position and velocity, when all three x's are
+		// due to conservation of position and momentum, when all three x's are
 		// back at the same position as the start, they will have velocity 0 again.
 		sameXAsStart, sameYAsStart, sameZAsStart := samePositionsAsStart(bodies, startPos)
 		if xPeriod == 0 && sameXAsStart {
