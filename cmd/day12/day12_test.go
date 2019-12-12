@@ -17,5 +17,5 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	assert.Equal(t, 551272644867044, Part2(realInput))
+	assert.Equal(t, int64(551272644867044), Part2(realInput))
 }

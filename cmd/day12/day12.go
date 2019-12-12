@@ -8,6 +8,78 @@ import (
 	"strings"
 )
 
+func Part1(input string, numSteps int64) int {
+	bodies, _ := ReadBodies(input)
+
+	log.Printf("starting simulation")
+
+	var finalEnergy int
+	for step := int64(1); step <= numSteps; step++ {
+		updateVelocitiesFromPositions(bodies)
+		updatePositionsFromVelocities(bodies)
+		var energy int
+		for _, b := range bodies {
+			energy += b.Energy()
+		}
+		finalEnergy = energy
+	}
+	return finalEnergy
+}
+
+func Part2(input string) int64 {
+	bodies, startPos := ReadBodies(input)
+
+	log.Printf("starting simulation")
+	var xPeriod, yPeriod, zPeriod int64
+	for step := int64(1); true; step++ {
+		updateVelocitiesFromPositions(bodies)
+		updatePositionsFromVelocities(bodies)
+
+		// for each of x,y,z, figure out if the all of the bodies have the same
+		// position as the start position. These are independently periodic, and
+		// due to conservation of position and velocity, when all three x's are
+		// back at the same position as the start, they will have velocity 0 again.
+		sameXAsStart, sameYAsStart, sameZAsStart := samePositionsAsStart(bodies, startPos)
+		if xPeriod == 0 && sameXAsStart {
+			// The bodies will have the same position for two steps at this point.
+			// It's the second step we want, when velocity is 0.
+			xPeriod = step + 1
+			log.Printf("found x period = %v", step)
+		}
+		if yPeriod == 0 && sameYAsStart {
+			yPeriod = step + 1
+			log.Printf("found y period = %v", step)
+		}
+		if zPeriod == 0 && sameZAsStart {
+			zPeriod = step + 1
+			log.Printf("found x period = %v", step)
+		}
+		if xPeriod > 0 && yPeriod > 0 && zPeriod > 0 {
+			return LCM(xPeriod, yPeriod, zPeriod)
+		}
+	}
+	log.Fatal("somehow escaped infinite loop!")
+	return -1
+}
+
+func samePositionsAsStart(bodies []*Body, startPos []*Body) (bool, bool, bool) {
+	startXPos := true
+	startYPos := true
+	startZPos := true
+	for b := range bodies {
+		if bodies[b].pos.x != startPos[b].pos.x {
+			startXPos = false
+		}
+		if bodies[b].pos.y != startPos[b].pos.y {
+			startYPos = false
+		}
+		if bodies[b].pos.z != startPos[b].pos.z {
+			startZPos = false
+		}
+	}
+	return startXPos, startYPos, startZPos
+}
+
 func main() {
 	input := `<x=5, y=4, z=4>
 <x=-11, y=-11, z=-3>
@@ -18,137 +90,37 @@ func main() {
 	log.Printf("part 2 answer is %v", Part2(input))
 }
 
-func Part1(input string, numSteps int64) int {
-	var bodies []*Body
-	var startPos []*Body
-	for _, s := range strings.Split(input, "\n") {
-		bodies = append(bodies, ReadBodyFromString(s))
-		startPos = append(startPos, ReadBodyFromString(s))
-	}
-
-	log.Printf("starting simulation")
-
-	var finalEnergy int
-	for step := int64(1); step <= numSteps; step++ {
-		// update velocities
-		for _, bod1 := range bodies {
-			for _, bod2 := range bodies {
-				if bod1.pos.x < bod2.pos.x {
-					bod1.vel.x++
-				}
-				if bod1.pos.x > bod2.pos.x {
-					bod1.vel.x--
-				}
-				if bod1.pos.y < bod2.pos.y {
-					bod1.vel.y++
-				}
-				if bod1.pos.y > bod2.pos.y {
-					bod1.vel.y--
-				}
-				if bod1.pos.z < bod2.pos.z {
-					bod1.vel.z++
-				}
-				if bod1.pos.z > bod2.pos.z {
-					bod1.vel.z--
-				}
+func updateVelocitiesFromPositions(bodies []*Body) {
+	for _, bod1 := range bodies {
+		for _, bod2 := range bodies {
+			if bod1.pos.x < bod2.pos.x {
+				bod1.vel.x++
+			}
+			if bod1.pos.x > bod2.pos.x {
+				bod1.vel.x--
+			}
+			if bod1.pos.y < bod2.pos.y {
+				bod1.vel.y++
+			}
+			if bod1.pos.y > bod2.pos.y {
+				bod1.vel.y--
+			}
+			if bod1.pos.z < bod2.pos.z {
+				bod1.vel.z++
+			}
+			if bod1.pos.z > bod2.pos.z {
+				bod1.vel.z--
 			}
 		}
-		// update positions
-		for _, bod := range bodies {
-			bod.pos.x += bod.vel.x
-			bod.pos.y += bod.vel.y
-			bod.pos.z += bod.vel.z
-		}
-		//log.Printf("after %v steps", step)
-		var energy int
-		for _, b := range bodies {
-			//log.Print(b)
-			energy += b.Energy()
-		}
-		finalEnergy = energy
 	}
-	return finalEnergy
 }
 
-func Part2(input string) int64 {
-	var bodies []*Body
-	var startPos []*Body
-	for _, s := range strings.Split(input, "\n") {
-		bodies = append(bodies, ReadBodyFromString(s))
-		startPos = append(startPos, ReadBodyFromString(s))
+func updatePositionsFromVelocities(bodies []*Body) {
+	for _, bod := range bodies {
+		bod.pos.x += bod.vel.x
+		bod.pos.y += bod.vel.y
+		bod.pos.z += bod.vel.z
 	}
-
-	log.Printf("starting simulation")
-	var xPeriod, yPeriod, zPeriod int64
-	for step := int64(1); true; step++ {
-		for _, bod1 := range bodies {
-			for _, bod2 := range bodies {
-				if bod1.pos.x < bod2.pos.x {
-					bod1.vel.x++
-					//bodies[b1].vel.x++
-				}
-				if bod1.pos.x > bod2.pos.x {
-					bod1.vel.x--
-				}
-				if bod1.pos.y < bod2.pos.y {
-					bod1.vel.y++
-				}
-				if bod1.pos.y > bod2.pos.y {
-					bod1.vel.y--
-				}
-				if bod1.pos.z < bod2.pos.z {
-					bod1.vel.z++
-				}
-				if bod1.pos.z > bod2.pos.z {
-					bod1.vel.z--
-				}
-			}
-		}
-		for _, bod := range bodies {
-			bod.pos.x += bod.vel.x
-			bod.pos.y += bod.vel.y
-			bod.pos.z += bod.vel.z
-		}
-
-		// for each of x,y,z, figure out if the all of the bodies have the same
-		// position as the start position. These are independently periodic, and
-		// due to conservation of position and velocity, when all three x's are
-		// back at the same position as the start, they will have velocity 0 again.
-		startXPos := true
-		startYPos := true
-		startZPos := true
-		for b := range bodies {
-			if bodies[b].pos.x != startPos[b].pos.x {
-				startXPos = false
-			}
-			if bodies[b].pos.y != startPos[b].pos.y {
-				startYPos = false
-			}
-			if bodies[b].pos.z != startPos[b].pos.z {
-				startZPos = false
-			}
-		}
-		if startXPos && xPeriod == 0 {
-			// The bodies will have the same position for two steps at this point.
-			// It's the second step we want, when velocity is 0.
-			xPeriod = step + 1
-			log.Printf("found x period = %v", step)
-		}
-		if startYPos && yPeriod == 0 {
-			yPeriod = step + 1
-			log.Printf("found y period = %v", step)
-		}
-		if startZPos && zPeriod == 0 {
-			zPeriod = step + 1
-			log.Printf("found x period = %v", step)
-		}
-		if xPeriod > 0 && yPeriod > 0 && zPeriod > 0 {
-			// 551272644867044
-			return LCM(xPeriod, yPeriod, zPeriod)
-		}
-	}
-	log.Fatal("somehow escaped infinite loop!")
-	return -1
 }
 
 type Triple struct {
@@ -191,6 +163,16 @@ func f(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func ReadBodies(input string) ([]*Body, []*Body) {
+	var bodiesCopy1 []*Body
+	var bodiesCopy2 []*Body
+	for _, s := range strings.Split(input, "\n") {
+		bodiesCopy1 = append(bodiesCopy1, ReadBodyFromString(s))
+		bodiesCopy2 = append(bodiesCopy2, ReadBodyFromString(s))
+	}
+	return bodiesCopy1, bodiesCopy2
 }
 
 func ReadBodyFromString(s string) *Body {
