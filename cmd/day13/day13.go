@@ -164,5 +164,5 @@ func main() {
 	log.Printf("found %v blocks", g.count(Block))
 
 	// Part 2
-	RunGame("cmd/day13/input13-1.txt", false)
+	RunGame("cmd/day13/input13-1.txt", true)
 }
