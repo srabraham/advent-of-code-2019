@@ -96,13 +96,19 @@ func (f Formulas) Solve(requiredFuels int) int {
 	return requiredOutputs["ORE"]
 }
 
-func main() {
+func Part1(filename string) int {
 	log.Print("starting...")
-	b, err := ioutil.ReadFile("cmd/day14/input14-1.txt")
+	b, err := ioutil.ReadFile(filename)
 	f(err)
 	formulas := CreateFormulas(strings.Split(string(b), "\n"))
+	return formulas.Solve(1)
+}
 
-	log.Printf("Part 1: minimum ore/fuel is %v", formulas.Solve(1))
+func Part2(filename string) int {
+	log.Print("starting...")
+	b, err := ioutil.ReadFile(filename)
+	f(err)
+	formulas := CreateFormulas(strings.Split(string(b), "\n"))
 
 	log.Printf("Part 2: starting binary search")
 	availableOre := 1000000000000
@@ -125,6 +131,12 @@ func main() {
 		}
 	}
 	log.Printf("Part 2: Done! can make a maximum of %v fuels", maxFuel)
+	return maxFuel
+}
+
+func main() {
+	log.Printf("Part 1: minimum ore/fuel is %v", Part1("cmd/day14/input14-1.txt"))
+	log.Printf("Part 2: Done! can make a maximum of %v fuels", Part2("cmd/day14/input14-1.txt"))
 }
 
 func max(a, b int) int {
