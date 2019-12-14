@@ -133,11 +133,6 @@ func Part2(filename string) int {
 	return maxFuel
 }
 
-func main() {
-	log.Printf("Part 1: minimum ore/fuel is %v", Part1("cmd/day14/input14-1.txt"))
-	log.Printf("Part 2: Done! can make a maximum of %v fuels", Part2("cmd/day14/input14-1.txt"))
-}
-
 func max(a, b int) int {
 	if a > b {
 		return a
@@ -145,34 +140,7 @@ func max(a, b int) int {
 	return b
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-// greatest common divisor (GCD) via Euclidean algorithm
-func GCD(a, b int) int {
-	for b != 0 {
-		t := b
-		b = a % b
-		a = t
-	}
-	if a < 0 {
-		a = -a
-	}
-	//log.Printf("gcd = %v", a)
-	return a
-}
-
-// find Least Common Multiple (LCM) via GCD
-func LCM(a, b int, integers ...int) int {
-	result := a * b / GCD(a, b)
-
-	for i := 0; i < len(integers); i++ {
-		result = LCM(result, integers[i])
-	}
-
-	return result
+func main() {
+	log.Printf("Part 1: minimum ore/fuel is %v", Part1("cmd/day14/input14-1.txt"))
+	log.Printf("Part 2: Done! can make a maximum of %v fuels", Part2("cmd/day14/input14-1.txt"))
 }
