@@ -58,25 +58,28 @@ func CreateFormulas(rows []string) Formulas {
 
 // Solve finds the number of ore needed to produce the provided number of fuel.
 func (f Formulas) Solve(requiredFuels int) int {
-	requiredOutputs := make(map[string]int)
+	requiredOutputs := map[string]int{"FUEL": requiredFuels}
 	excess := make(map[string]int)
-	requiredOutputs["FUEL"] = requiredFuels
-	//log.Printf("%v", produceToReq[produceStrToProduce["FUEL"]])
-	alreadyMade := make(map[string]bool)
-	for true {
-		done := true
+
+	continueLooping := true
+	for continueLooping {
+		continueLooping = false
+		// We'll be removing things from the map during iteration.
+		// That's fine in Go. https://golang.org/ref/spec#RangeClause
 		for k := range requiredOutputs {
 			if requiredOutputs[k] == 0 {
+				delete(requiredOutputs, k)
 				continue
 			}
 			if k != "ORE" {
-				done = false
+				// If there's still a non-zero non-ore requirement, we must
+				// keep looping.
+				continueLooping = true
 				produce := f.produceStrToProduce[k]
 				outputUnits := max(produce.amount, requiredOutputs[k])
 				roundsOfInputs := int(math.Ceil(float64(outputUnits) / float64(produce.amount)))
 				excess[k] += roundsOfInputs*produce.amount - requiredOutputs[k]
 				reqs := f.produceToReq[f.produceStrToProduce[k]]
-				//log.Printf("making %v of %v requires %v mult of %v", outputUnits, k, roundsOfInputs, reqs)
 				for _, r := range reqs {
 					requiredOutputs[r.thing] += r.amount * roundsOfInputs
 					for excess[r.thing] > 0 && requiredOutputs[r.thing] > 0 {
@@ -84,13 +87,9 @@ func (f Formulas) Solve(requiredFuels int) int {
 						excess[r.thing] -= 1
 					}
 				}
-				requiredOutputs[k] = 0
-				alreadyMade[k] = true
-				//log.Printf("after change, requiredOutputs %v", requiredOutputs)
+				// Empty the requirements for k
+				delete(requiredOutputs, k)
 			}
-		}
-		if done {
-			break
 		}
 	}
 	return requiredOutputs["ORE"]
@@ -117,7 +116,7 @@ func Part2(filename string) int {
 	maxFuel := availableOre
 	for minFuel != maxFuel {
 		round++
-		fuel := (maxFuel - minFuel + 1) / 2 + minFuel
+		fuel := (maxFuel-minFuel+1)/2 + minFuel
 		numOres := formulas.Solve(fuel)
 		if round%10000 == 0 {
 			log.Printf("requiredOutputs %v < %v ?", numOres, availableOre)
