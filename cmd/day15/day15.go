@@ -16,8 +16,6 @@ const (
 	Unknown Cell = iota
 	Empty
 	Wall
-	OxygenSys
-	Start
 	Oxygen
 )
 
@@ -35,10 +33,6 @@ func (c Cell) String() string {
 		return "."
 	case Wall:
 		return "█"
-	case Start:
-		return "S"
-	case OxygenSys:
-		return "F"
 	case Oxygen:
 		return "O"
 	}
@@ -54,6 +48,8 @@ type GameState struct {
 	vals              map[GridPos]Cell
 	necessaryUnknowns map[GridPos]bool
 	droidPos          GridPos
+	startPos          GridPos
+	finishPos         GridPos
 }
 
 func (g GameState) count(c Cell) int {
@@ -75,20 +71,20 @@ func (g GameState) discoveredWholeBoard() bool {
 	}
 	for k := range g.vals {
 		if g.vals[k] != Wall {
-			if g.vals[GridPos{x:k.x-1, y:k.y}] == Unknown {
-				g.necessaryUnknowns[GridPos{x: k.x-1, y:k.y}] = true
+			if g.vals[GridPos{x: k.x - 1, y: k.y}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x - 1, y: k.y}] = true
 				return false
 			}
-			if g.vals[GridPos{x:k.x+1, y:k.y}] == Unknown {
-				g.necessaryUnknowns[GridPos{x: k.x+1, y:k.y}] = true
+			if g.vals[GridPos{x: k.x + 1, y: k.y}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x + 1, y: k.y}] = true
 				return false
 			}
-			if g.vals[GridPos{x:k.x, y:k.y-1}] == Unknown {
-				g.necessaryUnknowns[GridPos{x: k.x, y:k.y-1}] = true
+			if g.vals[GridPos{x: k.x, y: k.y - 1}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x, y: k.y - 1}] = true
 				return false
 			}
-			if g.vals[GridPos{x:k.x, y:k.y+1}] == Unknown {
-				g.necessaryUnknowns[GridPos{x: k.x, y:k.y+1}] = true
+			if g.vals[GridPos{x: k.x, y: k.y + 1}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x, y: k.y + 1}] = true
 				return false
 			}
 		}
@@ -121,6 +117,10 @@ func (g GameState) String() string {
 			var cellStr string
 			if pos == g.droidPos {
 				cellStr = "D"
+			} else if pos == g.startPos {
+				cellStr = "S"
+			} else if pos == g.finishPos {
+				cellStr = "F"
 			} else {
 				cellStr = g.vals[pos].String()
 			}
@@ -130,6 +130,7 @@ func (g GameState) String() string {
 	}
 	return s
 }
+
 func main() {
 	log.Print("starting...")
 	b, err := ioutil.ReadFile("cmd/day15/input15-1.txt")
@@ -143,6 +144,7 @@ func main() {
 	}
 	g := GameState{vals: make(map[GridPos]Cell), necessaryUnknowns: make(map[GridPos]bool)}
 	g.vals[GridPos{x: 0, y: 0}] = Empty
+	g.startPos = GridPos{x: 0, y: 0}
 	//droidPos := GridPos{x: 0, y: 0}
 	inCh := make(chan int64)
 	outCh := make(chan int64)
@@ -151,11 +153,8 @@ func main() {
 		intcode.RunIntCodeWithChannels(cmds, inCh, outCh)
 		intcodeDone <- true
 	}()
-	var round int
 	var oxSys GridPos
-	for true {
-		round++
-		//if g.vals[GridPos{x:}]
+	for round := 1; ; round++ {
 		movementCommand := rand.Intn(4) + 1
 		var targetPos GridPos
 		switch movementCommand {
@@ -180,11 +179,10 @@ func main() {
 			g.vals[targetPos] = Empty
 		case 2:
 			oxSys = targetPos
-			g.vals[targetPos] = OxygenSys
+			g.vals[targetPos] = Empty
+			g.finishPos = targetPos
 			g.droidPos = targetPos
 		}
-		g.vals[GridPos{x: 0, y: 0}] = Start
-		g.vals[oxSys] = OxygenSys
 		if round%20000 == 0 {
 			log.Printf("grid after %v rounds =\n%v", round, g)
 		}
@@ -193,13 +191,8 @@ func main() {
 			log.Printf("grid after %v rounds =\n%v", round, g)
 			break
 		}
-		// 270
-		// not 270 for part 2
+		// 270 by manual count :/
 	}
-	g.vals[GridPos{x: 0, y: 0}] = Start
-	g.vals[oxSys] = OxygenSys
-
-	log.Fatal("bye")
 
 	g.vals[oxSys] = Oxygen
 	for min := 1; ; min++ {
@@ -236,5 +229,5 @@ func main() {
 }
 
 func EmptyPosLol(c Cell) bool {
-	return c == Empty || c == Start
+	return c == Empty
 }
