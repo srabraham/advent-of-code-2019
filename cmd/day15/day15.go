@@ -16,7 +16,6 @@ const (
 	Unknown Cell = iota
 	Empty
 	Wall
-	Droid
 	OxygenSys
 	Start
 	Oxygen
@@ -36,8 +35,6 @@ func (c Cell) String() string {
 		return "."
 	case Wall:
 		return "█"
-	case Droid:
-		return "D"
 	case Start:
 		return "S"
 	case OxygenSys:
@@ -54,9 +51,9 @@ type GridPos struct {
 }
 
 type GameState struct {
-	vals        map[GridPos]Cell
-	score       int64
-	joystickDir int
+	vals              map[GridPos]Cell
+	necessaryUnknowns map[GridPos]bool
+	droidPos          GridPos
 }
 
 func (g GameState) count(c Cell) int {
@@ -67,6 +64,36 @@ func (g GameState) count(c Cell) int {
 		}
 	}
 	return count
+}
+
+func (g GameState) discoveredWholeBoard() bool {
+	for k := range g.necessaryUnknowns {
+		if g.vals[k] == Unknown {
+			return false
+		}
+		delete(g.necessaryUnknowns, k)
+	}
+	for k := range g.vals {
+		if g.vals[k] != Wall {
+			if g.vals[GridPos{x:k.x-1, y:k.y}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x-1, y:k.y}] = true
+				return false
+			}
+			if g.vals[GridPos{x:k.x+1, y:k.y}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x+1, y:k.y}] = true
+				return false
+			}
+			if g.vals[GridPos{x:k.x, y:k.y-1}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x, y:k.y-1}] = true
+				return false
+			}
+			if g.vals[GridPos{x:k.x, y:k.y+1}] == Unknown {
+				g.necessaryUnknowns[GridPos{x: k.x, y:k.y+1}] = true
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (g GameState) String() string {
@@ -90,8 +117,14 @@ func (g GameState) String() string {
 
 	for y := minY; y < maxY+1; y++ {
 		for x := minX; x < maxX+1; x++ {
-			v := g.vals[GridPos{x: x, y: y}]
-			s += fmt.Sprintf("%v ", v)
+			pos := GridPos{x: x, y: y}
+			var cellStr string
+			if pos == g.droidPos {
+				cellStr = "D"
+			} else {
+				cellStr = g.vals[pos].String()
+			}
+			s += fmt.Sprintf("%v ", cellStr)
 		}
 		s += "\n"
 	}
@@ -108,8 +141,9 @@ func main() {
 		f(err)
 		cmds = append(cmds, n)
 	}
-	g := GameState{vals: make(map[GridPos]Cell)}
-	droidPos := GridPos{x: 0, y: 0}
+	g := GameState{vals: make(map[GridPos]Cell), necessaryUnknowns: make(map[GridPos]bool)}
+	g.vals[GridPos{x: 0, y: 0}] = Empty
+	//droidPos := GridPos{x: 0, y: 0}
 	inCh := make(chan int64)
 	outCh := make(chan int64)
 	intcodeDone := make(chan bool)
@@ -126,13 +160,13 @@ func main() {
 		var targetPos GridPos
 		switch movementCommand {
 		case 1:
-			targetPos = GridPos{x: droidPos.x, y: droidPos.y - 1}
+			targetPos = GridPos{x: g.droidPos.x, y: g.droidPos.y - 1}
 		case 2:
-			targetPos = GridPos{x: droidPos.x, y: droidPos.y + 1}
+			targetPos = GridPos{x: g.droidPos.x, y: g.droidPos.y + 1}
 		case 3:
-			targetPos = GridPos{x: droidPos.x - 1, y: droidPos.y}
+			targetPos = GridPos{x: g.droidPos.x - 1, y: g.droidPos.y}
 		case 4:
-			targetPos = GridPos{x: droidPos.x + 1, y: droidPos.y}
+			targetPos = GridPos{x: g.droidPos.x + 1, y: g.droidPos.y}
 		default:
 			log.Fatal("bad move")
 		}
@@ -142,24 +176,21 @@ func main() {
 		case 0:
 			g.vals[targetPos] = Wall
 		case 1:
-			g.vals[targetPos] = Droid
-			g.vals[droidPos] = Empty
-			droidPos = targetPos
+			g.droidPos = targetPos
+			g.vals[targetPos] = Empty
 		case 2:
 			oxSys = targetPos
 			g.vals[targetPos] = OxygenSys
-			g.vals[droidPos] = Empty
-			droidPos = targetPos
-			//
-			//log.Printf("grid =\n%v", g)
-			//log.Fatal("done")
+			g.droidPos = targetPos
 		}
 		g.vals[GridPos{x: 0, y: 0}] = Start
 		g.vals[oxSys] = OxygenSys
-		if round%1000 == 0 {
-			log.Printf("grid =\n%v", g)
+		if round%20000 == 0 {
+			log.Printf("grid after %v rounds =\n%v", round, g)
 		}
-		if round > 1000000 {
+		if g.discoveredWholeBoard() {
+			log.Printf("discovered whole board after %v rounds", round)
+			log.Printf("grid after %v rounds =\n%v", round, g)
 			break
 		}
 		// 270
@@ -167,6 +198,8 @@ func main() {
 	}
 	g.vals[GridPos{x: 0, y: 0}] = Start
 	g.vals[oxSys] = OxygenSys
+
+	log.Fatal("bye")
 
 	g.vals[oxSys] = Oxygen
 	for min := 1; ; min++ {
@@ -198,11 +231,10 @@ func main() {
 		log.Printf("grid after %v mins =\n%v", min, g)
 		if g.count(Empty) == 0 {
 			log.Fatalf("done after %v minutes", min)
-
 		}
 	}
 }
 
 func EmptyPosLol(c Cell) bool {
-	return c == Empty || c == Droid || c == Start
+	return c == Empty || c == Start
 }
